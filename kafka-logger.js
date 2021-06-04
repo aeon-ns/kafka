@@ -1,6 +1,7 @@
-const { logLevel } = require('kafkajs');
-const winston = require('winston');
-const chalk = require('chalk');
+const { logLevel }     = require('kafkajs');
+const winston          = require('winston');
+const chalk            = require('chalk');
+const { LEVEL, SPLAT } = require('triple-beam');
 
 const toWinstonLogLevel = level => {
     switch (level) {
@@ -24,11 +25,20 @@ const WinstonLogCreator = logLevel => {
             winston.format.colorize({ all: true }),
             winston.format.json(),
             winston.format.timestamp({ format: 'DD/MM/YYYY HH:mm:ss' }),
-            winston.format.printf(info => `${chalk.grey('[KAFKA]')}${chalk.dim('[')}${info.level}${chalk.dim(']::')} ${info.message}\t${chalk.dim(`[${info.timestamp}]`)}`)
+            winston.format.printf(info => {
+                // console.log(info);
+                return [
+                    `${chalk.italic(`[KAFKA]`)}${chalk.dim('[')}${info.level.replace(info[LEVEL], info[LEVEL].toUpperCase())}${chalk.dim(']:')}`,
+                    info[LEVEL] === 'info' ? info.message : info[LEVEL] === 'error' ? chalk.redBright(info.stack || info.message) : chalk.yellow(info.message), 
+                    chalk.dim(info['extra'] && typeof info['extra'] === 'object' ? JSON.stringify(info['extra']) : info['extra'] || ''),
+                    `\n${chalk.italic(chalk.blackBright(`[${info.timestamp}]`))}\n`,
+                ].join(' ');
+            })
         ),
         transports: [
             new winston.transports.Console()
-        ]
+        ],
+        handleExceptions: true
     })
 
     return ({ namespace, level, label, log }) => {

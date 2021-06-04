@@ -2,7 +2,7 @@ require('./constants');
 require('./db');
 
 const { Kafka } = require('kafkajs');
-const logger = require('./logger')('CODE', 'white');
+const logger = require('./logger')('CODE', 'cyan');
 
 const kafka = new Kafka({
     clientId: 'my-app',
@@ -17,7 +17,7 @@ const msg = JSON.stringify({ bank_name: 1, paymentID: 1 });
 const processProducer = async () => {
     const producer = kafka.producer();
     await producer.connect();
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1; i++) {
         let bank_name;
         switch (i % 4) {
             default:

@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const logger        = require('../logger')('SQL', 'blue');
+const logger        = require('../db-logger');
 
 if (!global.Sql) {
     throw "Sequelize connection must be initiated before importing this file."

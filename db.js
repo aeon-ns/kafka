@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-const logger        = require('./logger')('SQL', 'blue');
+const logger        = require('./db-logger');
 
 const DB_CONFIG = {
     USER   : 'root',

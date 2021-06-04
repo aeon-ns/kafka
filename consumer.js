@@ -2,15 +2,17 @@ require('./constants');
 require('./db');
 
 const { Kafka } = require('kafkajs');
-const moment = require('moment');
 
 const kafka = new Kafka({
-    clientId: 'my-app-consumer',
-    brokers: ['localhost:9092']
+    clientId  : 'my-app-consumer',
+    brokers   : ['localhost:9092'],
+    logCreator: require('./kafka-logger')
 });
 
-const topicName = TOPIC_NAME;
+const topicName      = TOPIC_NAME;
 const consumerNumber = process.argv[2] || '1';
+
+const logger = require('./logger')(`CON#${consumerNumber}`, 'cyan');
 
 const processConsumer = async () => {
     const paymentsConsumer = kafka.consumer({ groupId: 'payments' });
@@ -29,7 +31,7 @@ const processConsumer = async () => {
             paymentCounter++;
             try {
                 let transaction = JSON.parse(message.value);
-                let t = await TransactionsModel.findAll({
+                let t           = await TransactionsModel.findAll({
                     where: { id: transaction['id'] }
                 });
                 if (!t || !t.length) {
@@ -39,19 +41,15 @@ const processConsumer = async () => {
                 if (t['status'] != 'pending') {
                     throw "######### WARNING:: TRYING RE-EXECUTION OF PAYMENT #########";
                 }
-                await TransactionsModel.update({
-                    status: 'success'
-                }, {
-                    where: {
-                        id: transaction['id']
-                    }
-                });
-                await new Promise((resolve, reject) => {
-                    setTimeout(() => resolve(console.log('completed execution of ', transaction['id'])), 3000);
-                });
+                await TransactionsModel.update({ status: 'success' }, { where: { id: transaction['id'] }});
+                await new Promise((resolve) => setTimeout(() => resolve(logger.info('completed execution of ', transaction['id'])), 3000));
                 return true;
             } catch (e) {
-                console.error(e);
+                if (e.includes('WARNING')) {
+                    logger.warn(e);
+                } else {
+                    logger.error(e);
+                }
                 if (!["Transaction not found!!", "######### WARNING:: TRYING RE-EXECUTION OF PAYMENT #########"].includes(e)) {
                     throw e;
                 }
@@ -61,9 +59,9 @@ const processConsumer = async () => {
     });
 
     PROCESS_EXIT_SIGNALS.forEach(ev => {
-        console.log(`[${ev}] Setting`);
+        logger.info(`[${ev}] Setting`);
         process.once(ev, () => {
-            console.log(`[${ev}] Received`);
+            logger.info(`[${ev}] Received`);
             paymentsConsumer.disconnect()
             setTimeout(() => process.exit(0), 3000);
         });
@@ -77,11 +75,11 @@ const processConsumer = async () => {
  * @param message {KafkaMessage}
  */
 const logMessage = (counter, consumerName, topic, partition, message) => {
-    console.log(`[${consumerName}] Message Received: #${counter} :: [${topic}] #${partition} :: \t\t[${moment().format()}]`, {
+    logger.info(`Message Received: #${counter} :: [${topic}] #${partition}`, {
         offset : message.offset,
         headers: message.headers,
         value  : message.value.toString()
     });
 };
 
-processConsumer().catch(e => console.error(e));
+processConsumer().catch(e => logger.error(e));
