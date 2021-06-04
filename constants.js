@@ -1,8 +1,8 @@
 
-global.TOPIC_NAME = "payments-topic-3";
+global.TOPIC_NAME           = "payments-topic-3";
 global.PROCESS_EXIT_SIGNALS = [
-    'exit', 
-    'SIGINT', 
+    'exit',
+    'SIGINT',
     // 'SIGTERM', 
     // 'SIGQUIT',
     // 'SIGHUP',
@@ -27,14 +27,14 @@ global.PROCESS_EXIT_SIGNALS = [
 
 /**
  * @typedef {object} KafkaMessage
- * @property offset {string|number}
+ * @property offset  {string|number}
  * @property headers {string}
- * @property value {string}
+ * @property value   {string}
  */
 
 /**
  * @typedef {object} Transaction
- * @property id {string|number}
- * @property amount {number}
- * @property bank_name {'HDFC'|'YES'|'ICICI'|'KOTAK'}  
+ * @property id        {string|number}
+ * @property amount    {number}
+ * @property bank_name {'HDFC'|'YES'|'ICICI'|'KOTAK'}
  */

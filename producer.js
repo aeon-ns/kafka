@@ -2,17 +2,19 @@ require('./constants');
 require('./db');
 
 const { Kafka } = require('kafkajs');
+const logger = require('./logger')('CODE', 'white');
 
 const kafka = new Kafka({
     clientId: 'my-app',
-    brokers : ['localhost:9092']
+    brokers: ['localhost:9092'],
+    logCreator: require('./kafka-logger')
 });
 
 const topicName = TOPIC_NAME;
 
 const msg = JSON.stringify({ bank_name: 1, paymentID: 1 });
 
-const processProducer  = async () => {
+const processProducer = async () => {
     const producer = kafka.producer();
     await producer.connect();
     for (let i = 0; i < 100; i++) {
@@ -32,7 +34,7 @@ const processProducer  = async () => {
                 break;
         }
         let transaction = await TransactionsModel.create({
-            amount : Math.ceil(Math.random() * 6),
+            amount: Math.ceil(Math.random() * 6),
             bank_name: bank_name,
         })
         await producer.send({
@@ -44,24 +46,24 @@ const processProducer  = async () => {
     }
 
     process.on('SIGINT', () => {
-        console.log('[SIGINT] Received');
+        logger.info('[SIGINT] Received');
         producer.disconnect();
     });
 
     process.on('exit', () => {
-        console.log('[exit] Received');
+        logger.info('[exit] Received');
         producer.disconnect();
     })
 
 };
 
 processProducer().then(() => {
-    console.log('done');
+    logger.info('done');
     process.exit();
-});
+}).catch(e => logger.error(e));
 
 // const express = require('express');
 
 // const app = express();
 
-// app.listen(3000, () => console.log('Server running on port: 3000'));
+// app.listen(3000, () => logger.info('Server running on port: 3000'));

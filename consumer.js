@@ -29,7 +29,7 @@ const processConsumer = async () => {
             paymentCounter++;
             try {
                 let transaction = JSON.parse(message.value);
-                let t =  await TransactionsModel.findAll({
+                let t = await TransactionsModel.findAll({
                     where: { id: transaction['id'] }
                 });
                 if (!t || !t.length) {
